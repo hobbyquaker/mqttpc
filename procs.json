@@ -1,0 +1,17 @@
+{
+  "df": {
+    "path": "/bin/df",
+    "args": [
+      "-h"
+    ]
+  },
+  "nope": {
+    "path": "/bin/nope"
+  },
+  "echo": {
+    "path": "/bin/echo",
+    "args": [
+      "\"Test!\""
+    ]
+  }
+}

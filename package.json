@@ -1,0 +1,36 @@
+{
+  "name": "mqttpc",
+  "version": "1.0.0",
+  "description": "Advanced process control via MQTT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hobbyquaker/mqttpc"
+  },
+  "keywords": [
+    "mqtt",
+    "process",
+    "controller",
+    "start",
+    "stop",
+    "shell",
+    "command",
+    "pipe",
+    "stdin",
+    "stdout"
+  ],
+  "author": "Sebastian Raff <hq@ccu.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hobbyquaker/mqttpc/issues"
+  },
+  "homepage": "https://github.com/hobbyquaker/mqttpc",
+  "dependencies": {
+    "mqtt": "^1.11.1",
+    "yalm": "^3.0.0",
+    "yargs": "^4.7.1"
+  }
+}
