@@ -18,7 +18,7 @@ Needs Node.js and npm.
 ### Command line options
 
 ```
-Usage: index.js [options]
+Usage: mqttpc [options]
 
 Options:
   -v, --verbosity  possible values: "error", "warn", "info", "debug"
@@ -78,7 +78,7 @@ Create a config entry like this:
     }
 }
 ```
-...and (Re)start mqttpc. Now you can start your Backup Script by publish on ```pc/set/my-backup/spawn``` (Payload is irrelevant).
+...and (Re)start mqttpc. Now you can start your Backup Script by publishing on ```pc/set/my-backup/spawn``` (payload is irrelevant).
 If you want to stop your script via MQTT you could publish ```SIGKILL``` on the topic ```pc/set/my-backup/signal```.
 
 ### Topics mqttpc publishes
@@ -119,7 +119,7 @@ Pipe payload into stdin of the process
 
 #### pc/set/&lt;process_name&gt;/signal
 
-Send a signal to the process (Payload should be a string containing the signal name, e.g. "SIGHUP")
+Send a signal to the process (payload should be a string containing the signal name, e.g. "SIGHUP")
 
 
 ## License
