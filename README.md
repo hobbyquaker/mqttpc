@@ -5,6 +5,7 @@
 
 > Advanced process control via MQTT :satellite:
 
+Topic structure follows [mqtt-smarthome](https://github.com/mqtt-smarthome) architecture.
 
 ## Documentation
 
@@ -101,6 +102,10 @@ The processes stdout will be published on this topic (not retained).
 #### pc/status/&lt;process_name&gt;/stderr
 
 The processes stderr will be published on this topic (not retained).
+
+#### pc/connected
+
+Mqttpc will publish ```1``` on start. Will be reset to ```0``` via last will if broker connection or mqttpc process dies.
 
 ### Topics mqttpc subscribes 
 
