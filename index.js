@@ -45,7 +45,7 @@ mqtt.on('message', function (topic, payload) {
     payload = payload.toString();
     log.debug('mqtt <', topic, payload);
 
-    var tmp = topic.split('/');
+    var tmp = topic.substr(config.name.length).split('/');
 
     var p = tmp[2];
     var cmd = tmp[3];
