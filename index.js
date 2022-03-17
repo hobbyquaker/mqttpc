@@ -121,6 +121,11 @@ mqtt.on('message', function (topic, payload) {
                 mqtt.publish(config.name + '/status/' + p + '/error', e.toString(), {retain: true});
             });
 
+            if (proc.stdinFromSpawnPayload) {
+                proc._.stdin.write(payload);
+                proc._.stdin.end();
+            }
+
             break;
 
 

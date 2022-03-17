@@ -64,6 +64,7 @@ The only mandatory attribute for each process is "path", all others are optional
 * disableStdin - (boolean) Disable the possibility to send data through MQTT to the process stdin (default: false).
 * disableStdout - (boolean) Disable MQTT publish of the process stdout (default: false).
 * disableStderr - (boolean) Disable MQTT publish of the process stderr (default: false).
+* stdinFromSpawnPayload - (boolean) On spawn, send payload to stdin then close it (default: false).
 
 ### Usage example
 
