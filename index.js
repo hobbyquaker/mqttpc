@@ -41,6 +41,69 @@ mqtt.on('error', function (err) {
 
 });
 
+function processSpawn(procName, proc, payload) {
+    if (proc._) {
+        if (proc.enqueueSpawns) {
+            log.warn(procName, 'already running', proc._.pid, ' enqueuing...');
+            (proc.queue = proc.queue || []).push(payload);
+        } else {
+            log.error(procName, 'already running', proc._.pid);
+        }
+        return;
+    }
+
+    mqtt.publish(config.name + '/status/' + procName + '/error', '', {retain: true});
+
+    proc._ = spawn(proc.path, proc.args, {
+        cwd: proc.cwd,
+        env: proc.env,
+        uid: proc.uid,
+        gid: proc.gid,
+        shell: proc.shell,
+        stdio: 'pipe'
+    });
+
+    if (proc._.pid) {
+        log.info(procName, 'started', proc.path, proc._.pid);
+        mqtt.publish(config.name + '/status/' + procName + '/pid', '' + proc._.pid, {retain: true});
+
+    } else {
+        log.error(procName, 'no pid, start failed');
+    }
+
+    proc._.stdout.on('data', function (data) {
+        log.debug(procName, 'stdout', data.toString().replace(/\n$/, ''));
+        if (!proc.disableStdout) mqtt.publish(config.name + '/status/' + procName + '/stdout', data.toString(), {retain: true});
+    });
+
+    proc._.stderr.on('data', function (data) {
+        log.debug(procName, 'stderr', data.toString().replace(/\n$/, ''));
+        if (!proc.disableStderr) mqtt.publish(config.name + '/status/' + procName + '/stderr', data.toString(), {retain: true});
+    });
+
+    proc._.on('exit', function (code, signal) {
+        log.info(procName, 'exit', code, signal);
+        mqtt.publish(config.name + '/status/' + procName + '/pid', '', {retain: true});
+        mqtt.publish(config.name + '/status/' + procName + '/exit', '' + (typeof code === null ? signal : code), {retain: true});
+        delete(proc._);
+        if (proc.queue && proc.queue.length) {
+            log.info(procName, 'finished running, dequeuing...');
+            processSpawn(procName, proc, proc.queue.shift());
+        }
+    });
+
+    proc._.on('error', function (e) {
+        log.error(procName, 'error', e);
+        mqtt.publish(config.name + '/status/' + procName + '/error', e.toString(), {retain: true});
+    });
+
+    if (proc.stdinFromSpawnPayload) {
+        proc._.stdin.write(payload);
+        proc._.stdin.end();
+    }
+
+}
+
 mqtt.on('message', function (topic, payload) {
     payload = payload.toString();
     log.debug('mqtt <', topic, payload);
@@ -75,57 +138,7 @@ mqtt.on('message', function (topic, payload) {
 
 
         case 'spawn':
-            if (proc._) {
-                log.error(p, 'already running', proc._.pid);
-                return;
-            }
-
-            mqtt.publish(config.name + '/status/' + p + '/error', '', {retain: true});
-
-            proc._ = spawn(proc.path, proc.args, {
-                cwd: proc.cwd,
-                env: proc.env,
-                uid: proc.uid,
-                gid: proc.gid,
-                shell: proc.shell,
-                stdio: 'pipe'
-            });
-
-            if (proc._.pid) {
-                log.info(p, 'started', proc.path, proc._.pid);
-                mqtt.publish(config.name + '/status/' + p + '/pid', '' + proc._.pid, {retain: true});
-
-            } else {
-                log.error(p, 'no pid, start failed');
-            }
-
-            proc._.stdout.on('data', function (data) {
-                log.debug(p, 'stdout', data.toString().replace(/\n$/, ''));
-                if (!proc.disableStdout) mqtt.publish(config.name + '/status/' + p + '/stdout', data.toString(), {retain: true});
-            });
-
-            proc._.stderr.on('data', function (data) {
-                log.debug(p, 'stderr', data.toString().replace(/\n$/, ''));
-                if (!proc.disableStderr) mqtt.publish(config.name + '/status/' + p + '/stderr', data.toString(), {retain: true});
-            });
-
-            proc._.on('exit', function (code, signal) {
-                log.info(p, 'exit', code, signal);
-                mqtt.publish(config.name + '/status/' + p + '/pid', '', {retain: true});
-                mqtt.publish(config.name + '/status/' + p + '/exit', '' + (typeof code === null ? signal : code), {retain: true});
-                delete(proc._);
-            });
-
-            proc._.on('error', function (e) {
-                log.error(p, 'error', e);
-                mqtt.publish(config.name + '/status/' + p + '/error', e.toString(), {retain: true});
-            });
-
-            if (proc.stdinFromSpawnPayload) {
-                proc._.stdin.write(payload);
-                proc._.stdin.end();
-            }
-
+            processSpawn(p, proc, payload);
             break;
 
 
