@@ -1,6 +1,5 @@
 # mqttpc
 
-[![npm version](https://badge.fury.io/js/mqttpc.svg)](https://badge.fury.io/js/mqttpc) 
 [![License][mit-badge]][mit-url]
 
 > Advanced process control via MQTT :satellite:
@@ -29,9 +28,9 @@ Options:
                    https://github.com/mqttjs/MQTT.js#connect-using-a-url
                                                    [default: "mqtt://127.0.0.1"]
   -f, --config     config file                         [default: "./procs.json"]
-  -h, --help       Show help                                          
+  -h, --help       Show help
   --version        Show version number
-                                                                     
+
 ```
 
 ### Config file
@@ -107,7 +106,7 @@ The processes stderr will be published on this topic (not retained).
 
 Mqttpc will publish ```1``` on start. Will be reset to ```0``` via last will if broker connection or mqttpc process dies.
 
-### Topics mqttpc subscribes 
+### Topics mqttpc subscribes
 
 #### pc/set/&lt;process_name&gt;/spawn
 
