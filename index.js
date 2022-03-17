@@ -67,6 +67,10 @@ mqtt.on('message', function (topic, payload) {
                 log.error(p, 'not running');
                 return;
             }
+            if (payload.length)
+                proc._.stdin.write(payload);
+            else
+                proc._.stdin.end();
             break;
 
 

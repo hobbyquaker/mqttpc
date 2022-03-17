@@ -115,7 +115,7 @@ Start the process
 
 #### pc/set/&lt;process_name&gt;/pipe
 
-Pipe payload into stdin of the process
+Pipe payload into stdin of the process. Send an empty payload to close stdin.
 
 #### pc/set/&lt;process_name&gt;/signal
 
