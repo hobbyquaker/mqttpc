@@ -8,6 +8,8 @@ var spawn =     require('child_process').spawn;
 
 var procs =     require(config.config);
 
+const DEFAULT_BUF_SIZE = 4096;
+
 var mqttConnected;
 
 log.setLevel(config.verbosity);
@@ -41,6 +43,65 @@ mqtt.on('error', function (err) {
 
 });
 
+function topicFromFD(proc, fdName) {
+    return proc.merge ? "out" : fdName;
+}
+
+function appendBuffer(proc, fdName, data) {
+    const fds = proc._fdBuffers = proc._fdBuffers || {};
+    fdName = topicFromFD(proc, fdName);
+    const fdBuf = fds[fdName] = fds[fdName] || { len: 0, data: [], clipped: 0 };
+    fdBuf.len += data.length;
+    fdBuf.data.push(data);
+    const max_buffer_size = proc.bufferMax || DEFAULT_BUF_SIZE;
+    while (fdBuf.len > max_buffer_size && fdBuf.data.length > 1) {
+        const plopped = fdBuf.data.shift();
+        fdBuf.len -= plopped.length;
+        fdBuf.clipped += plopped.length;
+    }
+}
+
+function handleProcessOutputEach(procName, proc, fdName, data) {
+    log.debug(procName, fdName, data.toString().replace(/\n$/, ''));
+    let retain = false;
+    switch (proc[fdName] || 'drop') {
+        case 'drop': break;
+        case 'buffer':
+        case 'buffer_retain':
+            appendBuffer(proc, fdName, data);
+            break;
+        case 'per_line_retain':
+            retain = true;
+            // no break: passthrough on purpose here
+        case 'per_line':
+            mqtt.publish(config.name + '/status/' + procName + '/' + topicFromFD(proc, fdName), data.toString(), {retain});
+            break;
+    }
+}
+
+function handleProcessOutput(procName, proc, fdName, data) {
+    handleProcessOutputEach(procName, proc, fdName, data);
+    handleProcessOutputEach(procName, proc, 'output', data);
+}
+
+function handleProcessOutputAtExit(procName, proc, fdName) {
+    let retain = false;
+    switch (proc[fdName] || 'drop') {
+        case 'buffer_retain':
+            retain = true;
+            // no break: passthrough on purpose here
+        case 'buffer':
+            const fds = proc._fdBuffers = proc._fdBuffers || {};
+            fdName = topicFromFD(proc, fdName);
+            const fdBuf = fds[fdName] = fds[fdName] || { len: 0, data: [] };
+            if (!fdBuf.len) return;
+            const dropped = fdBuf.clipped ? `...(clipped ${fdBuf.clipped})...\n` : "";
+            const result = Buffer.concat(fdBuf.data, fdBuf.len);
+            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, dropped + result.toString(), {retain});
+            break;
+    }
+}
+
 function processSpawn(procName, proc, payload) {
     if (proc._) {
         if (proc.enqueueSpawns) {
@@ -71,18 +132,15 @@ function processSpawn(procName, proc, payload) {
         log.error(procName, 'no pid, start failed');
     }
 
-    proc._.stdout.on('data', function (data) {
-        log.debug(procName, 'stdout', data.toString().replace(/\n$/, ''));
-        if (!proc.disableStdout) mqtt.publish(config.name + '/status/' + procName + '/stdout', data.toString(), {retain: true});
-    });
-
-    proc._.stderr.on('data', function (data) {
-        log.debug(procName, 'stderr', data.toString().replace(/\n$/, ''));
-        if (!proc.disableStderr) mqtt.publish(config.name + '/status/' + procName + '/stderr', data.toString(), {retain: true});
-    });
+    delete proc._fdBuffers;
+    proc._.stdout.on('data', data => handleProcessOutput(procName, proc, 'stdout', data));
+    proc._.stderr.on('data', data => handleProcessOutput(procName, proc, 'stderr', data));
 
     proc._.on('exit', function (code, signal) {
         log.info(procName, 'exit', code, signal);
+        handleProcessOutputAtExit(procName, proc, 'stdout');
+        handleProcessOutputAtExit(procName, proc, 'stderr');
+        handleProcessOutputAtExit(procName, proc, 'output');
         mqtt.publish(config.name + '/status/' + procName + '/pid', '', {retain: true});
         mqtt.publish(config.name + '/status/' + procName + '/exit', '' + (code === null ? signal : code), {retain: true});
         delete(proc._);

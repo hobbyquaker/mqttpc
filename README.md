@@ -62,10 +62,15 @@ The only mandatory attribute for each process is "path", all others are optional
 * gid - (number) group id
 * shell - (boolean|string) run command in a shell (default: false). See https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
 * disableStdin - (boolean) Disable the possibility to send data through MQTT to the process stdin (default: false).
-* disableStdout - (boolean) Disable MQTT publish of the process stdout (default: false).
-* disableStderr - (boolean) Disable MQTT publish of the process stderr (default: false).
 * stdinFromSpawnPayload - (boolean) On spawn, send payload to stdin then close it (default: false).
 * enqueueSpawns - (boolean) If spawn is called when it's already running, enqueue and run after process exits (default: false).
+* bufferMax - (number) Maximum byte size for buffered outputs
+* `stdout`, `stderr` and `output`: (`output` is the combination of the other two, preserving order as flushed)
+    * `drop`: Output ignored
+    * `buffer` : Output is buffered until the last `bufferMax`, and published when the process exits
+    * `buffer_retain` : Same as above but publishes have retain set
+    * `per_line` : Each line of output is posted separately
+    * `per_line_retain` : Same as above but publishes have retain set
 
 ### Usage example
 
@@ -103,6 +108,10 @@ The processes stdout will be published on this topic (not retained).
 #### pc/status/&lt;process_name&gt;/stderr
 
 The processes stderr will be published on this topic (not retained).
+
+#### pc/status/&lt;process_name&gt;/output
+
+The processes' combined `stdout` + `stderr` will be published on this topic.
 
 #### pc/connected
 
