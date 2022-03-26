@@ -84,7 +84,7 @@ function processSpawn(procName, proc, payload) {
     proc._.on('exit', function (code, signal) {
         log.info(procName, 'exit', code, signal);
         mqtt.publish(config.name + '/status/' + procName + '/pid', '', {retain: true});
-        mqtt.publish(config.name + '/status/' + procName + '/exit', '' + (typeof code === null ? signal : code), {retain: true});
+        mqtt.publish(config.name + '/status/' + procName + '/exit', '' + (code === null ? signal : code), {retain: true});
         delete(proc._);
         if (proc.queue && proc.queue.length) {
             log.info(procName, 'finished running, dequeuing...');
