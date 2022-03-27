@@ -31,7 +31,9 @@ mqtt.on('connect', function () {
         log.info('mqtt subscribe', config.name + topic);
         mqtt.subscribe(config.name + topic);
     }
+
     subAndLog('/set/#');
+
     TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF.forEach(x => subAndLog(x));
     setTimeout(() => {
         const topics = TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF.map(x => config.name + x);
@@ -103,6 +105,7 @@ function handleProcessOutputAtExit(procName, proc, fdName) {
             const dropped = fdBuf.clipped ? `...(clipped ${fdBuf.clipped})...\n` : "";
             const result = Buffer.concat(fdBuf.data, fdBuf.len);
             mqtt.publish(config.name + '/status/' + procName + '/' + fdName, dropped + result.toString(), {retain});
+            delete fdBuf[fdName];
             break;
     }
 }
