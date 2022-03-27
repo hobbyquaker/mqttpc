@@ -80,7 +80,7 @@ function handleProcessOutputEach(procName, proc, fdName, data) {
             retain = true;
             // no break: passthrough on purpose here
         case 'stream':
-            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, data.toString(), {retain});
+            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, data, {retain});
             break;
         default:
             throw new Error("Unknown handler " + JSON.stringify(proc[fdName]) + " in proc definition for " + procName);
@@ -104,7 +104,7 @@ function handleProcessOutputAtExit(procName, proc, fdName) {
             if (!fdBuf.len) return;
             const dropped = fdBuf.clipped ? `...(clipped ${fdBuf.clipped})...\n` : "";
             const result = Buffer.concat(fdBuf.data, fdBuf.len);
-            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, dropped + result.toString(), {retain});
+            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, dropped ? (dropped + result.toString()) : result, {retain});
             delete fdBuf[fdName];
             break;
     }
