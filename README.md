@@ -64,13 +64,13 @@ The only mandatory attribute for each process is "path", all others are optional
 * `disableStdin` - (boolean) Disable the possibility to send data through MQTT to the process stdin (default: false).
 * `stdinFromSpawnPayload` - (boolean) On spawn, send payload to stdin then close it (default: false).
 * `enqueueSpawns` - (boolean) If spawn is called when it's already running, enqueue and run after process exits (default: false).
-* `bufferMax` - (number) Maximum byte size for buffered outputs
+* `bufferMax` - (number default: 128k) Maximum byte size for each buffered output
 * `stdout`, `stderr` and `output`: (`output` is the combination of the other two, preserving order as flushed)
     * `drop`: **Default** - Output ignored
     * `buffer` : Output is buffered until the last `bufferMax` bytes, and published when the process exits
     * `buffer_retain` : Same as above but publishes have retain set
-    * `per_line` : Each line of output is posted separately
-    * `per_line_retain` : Same as above but publishes have retain set
+    * `stream` : Each block of output is posted immediately (as per the decisions of the gods of buffers and node and os and so on)
+    * `stream_retain` : Same as above but publishes have retain set
 
 ### Usage example
 

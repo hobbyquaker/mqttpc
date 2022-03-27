@@ -76,10 +76,10 @@ function handleProcessOutputEach(procName, proc, fdName, data) {
         case 'buffer_retain':
             appendBuffer(proc, fdName, data);
             break;
-        case 'per_line_retain':
+        case 'stream_retain':
             retain = true;
             // no break: passthrough on purpose here
-        case 'per_line':
+        case 'stream':
             mqtt.publish(config.name + '/status/' + procName + '/' + fdName, data.toString(), {retain});
             break;
         default:
@@ -111,7 +111,7 @@ function handleProcessOutputAtExit(procName, proc, fdName) {
 }
 
 function fdActionHasRetain(proc, fdName) {
-    return proc[fdName] == 'buffer_retain' || [fdName] == 'per_line_retain';
+    return proc[fdName] == 'buffer_retain' || [fdName] == 'stream_retain';
 }
 
 function processSpawn(procName, proc, payload) {
