@@ -44,7 +44,7 @@ mqtt.on('error', function (err) {
 });
 
 function topicFromFD(proc, fdName) {
-    return proc.merge ? "out" : fdName;
+    return proc.merge ? "output" : fdName;
 }
 
 function appendBuffer(proc, fdName, data) {
@@ -54,7 +54,7 @@ function appendBuffer(proc, fdName, data) {
     fdBuf.len += data.length;
     fdBuf.data.push(data);
     const max_buffer_size = proc.bufferMax || DEFAULT_BUF_SIZE;
-    while (fdBuf.len > max_buffer_size && fdBuf.data.length > 1) {
+    while (fdBuf.data.length > 1 && fdBuf.len > (max_buffer_size + fdBuf.data[0].length)) {
         const plopped = fdBuf.data.shift();
         fdBuf.len -= plopped.length;
         fdBuf.clipped += plopped.length;
