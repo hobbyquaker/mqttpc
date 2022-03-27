@@ -27,7 +27,12 @@ mqtt.on('connect', function () {
 
     log.info('mqtt subscribe', config.name + '/set/#');
     mqtt.subscribe(config.name + '/set/#');
-
+    log.info('mqtt subscribe', config.name + '/status/+/stderr');
+    mqtt.subscribe(config.name + '/status/+/stderr');
+    log.info('mqtt subscribe', config.name + '/status/+/stdout');
+    mqtt.subscribe(config.name + '/status/+/stdout');
+    log.info('mqtt subscribe', config.name + '/status/+/output');
+    mqtt.subscribe(config.name + '/status/+/output');
 });
 
 mqtt.on('close', function () {
@@ -102,6 +107,10 @@ function handleProcessOutputAtExit(procName, proc, fdName) {
     }
 }
 
+function fdActionHasRetain(proc, fdName) {
+    return proc[fdName] == 'buffer_retain' || [fdName] == 'per_line_retain';
+}
+
 function processSpawn(procName, proc, payload) {
     if (proc._) {
         if (proc.enqueueSpawns) {
@@ -162,12 +171,12 @@ function processSpawn(procName, proc, payload) {
 
 }
 
-mqtt.on('message', function (topic, payload) {
+mqtt.on('message', function (topic, payload, packet) {
     payload = payload.toString();
     log.debug('mqtt <', topic, payload);
 
     var tmp = topic.substr(config.name.length).split('/');
-
+    const dir = tmp[1];
     var p = tmp[2];
     var cmd = tmp[3];
 
@@ -175,8 +184,19 @@ mqtt.on('message', function (topic, payload) {
         log.error('unknown process ' + p);
         return;
     }
-
     var proc = procs[p];
+
+    if (dir == "status") {
+        if (!packet.retain) return;
+
+        const fd = cmd;
+        if (!fdActionHasRetain(proc)) {
+            log.warn(p, 'deleting retained mqtt but not retained in config', packet);
+            mqtt.publish(topic, "", {retain: true});
+        }
+        return;
+    }
+
 
     switch (cmd) {
         case 'pipe':
