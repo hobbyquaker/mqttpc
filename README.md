@@ -54,20 +54,20 @@ The config file contains a JSON definition of all processes you want to control 
 
 The only mandatory attribute for each process is "path", all others are optional.
 
-* path - (string) path to the process
-* args - (array[string]) arguments
-* cwd - (string) the working directory (default: the cwd of mqttpc)
-* env - (object) key-value paired environment (default: the env of mqttpc)
-* uid - (number) user id
-* gid - (number) group id
-* shell - (boolean|string) run command in a shell (default: false). See https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
-* disableStdin - (boolean) Disable the possibility to send data through MQTT to the process stdin (default: false).
-* stdinFromSpawnPayload - (boolean) On spawn, send payload to stdin then close it (default: false).
-* enqueueSpawns - (boolean) If spawn is called when it's already running, enqueue and run after process exits (default: false).
-* bufferMax - (number) Maximum byte size for buffered outputs
+* `path` - (string) path to the process
+* `args` - (array[string]) arguments
+* `cwd` - (string) the working directory (default: the cwd of mqttpc)
+* `env` - (object) key-value paired environment (default: the env of mqttpc)
+* `uid` - (number) user id
+* `gid` - (number) group id
+* `shell` - (boolean|string) run command in a shell (default: false). See https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
+* `disableStdin` - (boolean) Disable the possibility to send data through MQTT to the process stdin (default: false).
+* `stdinFromSpawnPayload` - (boolean) On spawn, send payload to stdin then close it (default: false).
+* `enqueueSpawns` - (boolean) If spawn is called when it's already running, enqueue and run after process exits (default: false).
+* `bufferMax` - (number) Maximum byte size for buffered outputs
 * `stdout`, `stderr` and `output`: (`output` is the combination of the other two, preserving order as flushed)
-    * `drop`: Output ignored
-    * `buffer` : Output is buffered until the last `bufferMax`, and published when the process exits
+    * `drop`: **Default** - Output ignored
+    * `buffer` : Output is buffered until the last `bufferMax` bytes, and published when the process exits
     * `buffer_retain` : Same as above but publishes have retain set
     * `per_line` : Each line of output is posted separately
     * `per_line_retain` : Same as above but publishes have retain set
@@ -103,11 +103,11 @@ Errors on process spawn will be published retained on this topic. On next succes
 
 #### pc/status/&lt;process_name&gt;/stdout
 
-The processes stdout will be published on this topic (not retained).
+The processes `stdout` will be published on this topic.
 
 #### pc/status/&lt;process_name&gt;/stderr
 
-The processes stderr will be published on this topic (not retained).
+The processes `stderr` will be published on this topic.
 
 #### pc/status/&lt;process_name&gt;/output
 
