@@ -8,7 +8,7 @@ var spawn =     require('child_process').spawn;
 
 var procs =     require(config.config);
 
-const DEFAULT_BUF_SIZE = 4096;
+const DEFAULT_BUF_SIZE = 128 * 1024;
 const TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF = '/status/+/stdout /status/+/stderr /status/+/output'.split(' ');
 
 var mqttConnected;
