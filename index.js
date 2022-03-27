@@ -10,6 +10,7 @@ var procs =     require(config.config);
 
 const DEFAULT_BUF_SIZE = 128 * 1024;
 const TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF = '/status/+/stdout /status/+/stderr /status/+/output'.split(' ');
+const TOPICS_TO_WATCH_FOR_RETAINED_TIMEOUT_MS = 20 * 1000;
 
 var mqttConnected;
 
@@ -32,6 +33,11 @@ mqtt.on('connect', function () {
     }
     subAndLog('/set/#');
     TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF.forEach(x => subAndLog(x));
+    setTimeout(() => {
+        const topics = TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF.map(x => config.name + x);
+        log.info('mqtt unsubscribe', topics.join(" and "));
+        mqtt.unsubscribe(topics);
+    }, TOPICS_TO_WATCH_FOR_RETAINED_TIMEOUT_MS);
 });
 
 mqtt.on('close', function () {
