@@ -9,6 +9,7 @@ var spawn =     require('child_process').spawn;
 var procs =     require(config.config);
 
 const DEFAULT_BUF_SIZE = 4096;
+const TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF = '/status/+/stdout /status/+/stderr /status/+/output'.split(' ');
 
 var mqttConnected;
 
@@ -25,14 +26,12 @@ mqtt.on('connect', function () {
     log.info('mqtt connected', config.url);
     mqtt.publish(config.name + '/connected', '1', {retain: true});
 
-    log.info('mqtt subscribe', config.name + '/set/#');
-    mqtt.subscribe(config.name + '/set/#');
-    log.info('mqtt subscribe', config.name + '/status/+/stderr');
-    mqtt.subscribe(config.name + '/status/+/stderr');
-    log.info('mqtt subscribe', config.name + '/status/+/stdout');
-    mqtt.subscribe(config.name + '/status/+/stdout');
-    log.info('mqtt subscribe', config.name + '/status/+/output');
-    mqtt.subscribe(config.name + '/status/+/output');
+    const subAndLog = (topic) => {
+        log.info('mqtt subscribe', config.name + topic);
+        mqtt.subscribe(config.name + topic);
+    }
+    subAndLog('/set/#');
+    TOPICS_TO_WATCH_FOR_RETAINED_FROM_PREVIOUS_CONF.forEach(x => subAndLog(x));
 });
 
 mqtt.on('close', function () {
@@ -40,7 +39,6 @@ mqtt.on('close', function () {
         mqttConnected = false;
         log.info('mqtt closed ' + config.url);
     }
-
 });
 
 mqtt.on('error', function (err) {
@@ -48,13 +46,8 @@ mqtt.on('error', function (err) {
 
 });
 
-function topicFromFD(proc, fdName) {
-    return proc.merge ? "output" : fdName;
-}
-
 function appendBuffer(proc, fdName, data) {
     const fds = proc._fdBuffers = proc._fdBuffers || {};
-    fdName = topicFromFD(proc, fdName);
     const fdBuf = fds[fdName] = fds[fdName] || { len: 0, data: [], clipped: 0 };
     fdBuf.len += data.length;
     fdBuf.data.push(data);
@@ -79,8 +72,10 @@ function handleProcessOutputEach(procName, proc, fdName, data) {
             retain = true;
             // no break: passthrough on purpose here
         case 'per_line':
-            mqtt.publish(config.name + '/status/' + procName + '/' + topicFromFD(proc, fdName), data.toString(), {retain});
+            mqtt.publish(config.name + '/status/' + procName + '/' + fdName, data.toString(), {retain});
             break;
+        default:
+            throw new Error("Unknown handler " + JSON.stringify(proc[fdName]) + " in proc definition for " + procName);
     }
 }
 
@@ -97,7 +92,6 @@ function handleProcessOutputAtExit(procName, proc, fdName) {
             // no break: passthrough on purpose here
         case 'buffer':
             const fds = proc._fdBuffers = proc._fdBuffers || {};
-            fdName = topicFromFD(proc, fdName);
             const fdBuf = fds[fdName] = fds[fdName] || { len: 0, data: [] };
             if (!fdBuf.len) return;
             const dropped = fdBuf.clipped ? `...(clipped ${fdBuf.clipped})...\n` : "";
