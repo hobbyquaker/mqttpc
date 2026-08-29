@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hobbyquaker/mqttpc/procs.schema.json",
+  "title": "mqttpc processes",
+  "description": "The processes this instance may run. A name that is not in here cannot be started over MQTT, so this file is the allowlist \u2014 keep it as small as the job needs.",
+  "type": "object",
+  "additionalProperties": false,
+  "propertyNames": {
+    "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+    "description": "process name; becomes an MQTT topic level, so no slashes, + or #"
+  },
+  "patternProperties": {
+    "^[A-Za-z0-9][A-Za-z0-9._-]*$": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "absolute path of the program to run"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "arguments, one per element (never a single string of them)"
+        },
+        "cwd": {
+          "type": "string",
+          "description": "working directory (default: mqttpc's own)"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "environment; replaces mqttpc's rather than adding to it"
+        },
+        "uid": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "run as this user id \u2014 only possible when mqttpc itself runs as root"
+        },
+        "gid": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "run as this group id \u2014 only possible when mqttpc itself runs as root"
+        },
+        "shell": {
+          "type": ["boolean", "string"],
+          "description": "run through a shell. Only needed for pipes and redirections; without it path and args are passed to execve untouched, which is safer"
+        },
+        "disableStdin": {
+          "type": "boolean",
+          "default": false,
+          "description": "refuse set/<name>/pipe, so nothing from MQTT reaches this program's stdin"
+        },
+        "disableStdout": {
+          "type": "boolean",
+          "default": false,
+          "description": "do not publish stdout"
+        },
+        "disableStderr": {
+          "type": "boolean",
+          "default": false,
+          "description": "do not publish stderr"
+        },
+        "comment": {
+          "type": "string",
+          "description": "free text, ignored \u2014 JSON has no comments"
+        },
+        "stdout": {
+          "enum": ["drop", "stream", "stream_retain", "buffer", "buffer_retain"],
+          "description": "how stdout is published (default: stream). drop: not published. stream: each chunk as it arrives. buffer: collected and published as one message when the process exits. The _retain variants publish retained, which only makes sense for output you want to survive a restart"
+        },
+        "stderr": {
+          "enum": ["drop", "stream", "stream_retain", "buffer", "buffer_retain"],
+          "description": "how stderr is published (default: stream). drop: not published. stream: each chunk as it arrives. buffer: collected and published as one message when the process exits. The _retain variants publish retained, which only makes sense for output you want to survive a restart"
+        },
+        "output": {
+          "enum": ["drop", "stream", "stream_retain", "buffer", "buffer_retain"],
+          "description": "stdout and stderr combined, in the order they were flushed, on <name>/status/<proc>/output (default: drop \u2014 leaving it on would publish everything twice). drop: not published. stream: each chunk as it arrives. buffer: collected and published as one message when the process exits. The _retain variants publish retained, which only makes sense for output you want to survive a restart"
+        },
+        "bufferMax": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 131072,
+          "description": "bytes kept in buffer mode; older output is dropped and the message says how much"
+        },
+        "stdinFromSpawnPayload": {
+          "type": "boolean",
+          "default": false,
+          "description": "the spawn payload is written to stdin, which is then closed \u2014 a one-shot command with its input in one message"
+        },
+        "enqueueSpawns": {
+          "type": "boolean",
+          "default": false,
+          "description": "a spawn while it is already running waits its turn instead of being refused"
+        }
+      }
+    }
+  }
+}

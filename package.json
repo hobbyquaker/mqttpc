@@ -1,37 +1,66 @@
 {
   "name": "mqttpc",
-  "version": "1.0.1",
-  "description": "Advanced process control via MQTT",
+  "version": "2.0.0",
+  "description": "Control processes on a host via MQTT. Follows the mqtt-smarthome architecture.",
+  "type": "module",
   "main": "index.js",
-  "bin": "./index.js",
+  "bin": {
+    "mqttpc": "index.js"
+  },
+  "preferGlobal": true,
+  "files": [
+    "index.js",
+    "config.js",
+    "lib/",
+    "example-procs.json",
+    "procs.schema.json"
+  ],
+  "engines": {
+    "node": "^20.19 || ^22.12 || >=24"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write . && eslint --fix .",
+    "test": "node --test",
+    "deploy": "bash deploy.sh"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hobbyquaker/mqttpc"
+    "url": "git+https://github.com/hobbyquaker/mqttpc.git"
   },
-  "keywords": [
-    "mqtt",
-    "process",
-    "controller",
-    "start",
-    "stop",
-    "shell",
-    "command",
-    "pipe",
-    "stdin",
-    "stdout"
-  ],
-  "author": "Sebastian Raff <hq@ccu.io>",
-  "license": "MIT",
+  "homepage": "https://github.com/hobbyquaker/mqttpc",
   "bugs": {
     "url": "https://github.com/hobbyquaker/mqttpc/issues"
   },
-  "homepage": "https://github.com/hobbyquaker/mqttpc",
+  "author": "Sebastian Raff <hobbyquaker@gmail.com> (https://github.com/hobbyquaker)",
+  "license": "MIT",
+  "keywords": [
+    "mqtt",
+    "mqtt-smarthome",
+    "home-automation",
+    "process",
+    "controller",
+    "spawn",
+    "shell",
+    "command",
+    "stdin",
+    "stdout"
+  ],
+  "mqttInterfaces": {
+    "spec": "2.0",
+    "envPrefix": "MQTTPC",
+    "needs": [],
+    "serviceExtra": []
+  },
   "dependencies": {
-    "mqtt": "^1.11.1",
-    "yalm": "^3.0.0",
-    "yargs": "^4.7.1"
+    "mqtt-interfaces-core": "^0.14.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "eslint": "^9",
+    "eslint-config-prettier": "^10",
+    "globals": "^16",
+    "prettier": "^3"
   }
 }

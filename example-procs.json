@@ -1,0 +1,20 @@
+{
+  "backup": {
+    "path": "/usr/local/bin/my-backup.sh",
+    "comment": "started with: mosquitto_pub -t pc/set/backup/spawn -n"
+  },
+  "disk-free": {
+    "path": "/bin/df",
+    "args": ["-h"]
+  },
+  "reboot": {
+    "path": "/usr/bin/sudo",
+    "args": ["/usr/sbin/reboot"],
+    "comment": "needs a sudoers entry — see the README; do not run mqttpc as root for this"
+  },
+  "log-tail": {
+    "path": "/usr/bin/tail",
+    "args": ["-f", "/var/log/syslog"],
+    "disableStdin": true
+  }
+}
