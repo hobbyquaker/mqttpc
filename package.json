@@ -1,6 +1,6 @@
 {
   "name": "mqttpc",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Control processes on a host via MQTT. Follows the mqtt-smarthome architecture.",
   "type": "module",
   "main": "index.js",
@@ -54,7 +54,7 @@
     "serviceExtra": []
   },
   "dependencies": {
-    "mqtt-interfaces-core": "^0.14.0"
+    "mqtt-interfaces-core": "^0.15.0"
   },
   "devDependencies": {
     "@eslint/js": "^9",

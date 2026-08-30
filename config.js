@@ -41,6 +41,9 @@ export default parseConfig({
     pkg,
     options: OPTIONS,
     defaults: {name: 'pc'},
+    // it publishes status items (pid, exit, stdout), so --json-payloads means something here —
+    // but it announces no Home Assistant entities, so those two options would configure nothing
+    publishesDiscovery: false,
     check,
     examples: [
         ['$0 -u mqtt://broker -f /etc/mqttpc/pc.procs.json', 'run in the foreground'],

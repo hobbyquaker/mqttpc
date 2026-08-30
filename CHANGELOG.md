@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.1
+
+### Fixed
+
+- `--ha-discovery` and `--ha-prefix` are gone. They come from the core's shared option set, and
+  mqttpc announces no Home Assistant entities, so both configured nothing while still appearing in
+  `--help` and in a config UI's form. `--json-payloads` stays: the status items are real.
+  Needs mqtt-interfaces-core 0.15.0.
+
 ## 2.0.0
 
 A rewrite on [mqtt-interfaces-core](https://github.com/hobbyquaker/mqtt-interfaces-core), plus the
