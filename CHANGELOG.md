@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- **Home Assistant discovery: one device per process**, hanging off a bridge device for the
+  instance. Each gets a **Running** binary sensor (on while there is a pid, `device_class: running`),
+  **Start**, **Stop** (`SIGTERM`) and **Kill** (`SIGKILL`) buttons, and PID / Last exit / Last error
+  as diagnostics. The bridge device carries a count of what is running, published on
+  `<name>/status/bridge/running`. `--ha-discovery` and `--ha-prefix` are back, and now mean
+  something.
+- The Start button presses an **empty** payload rather than HA's default `PRESS`, so a process with
+  `stdinFromSpawnPayload` does not get the word "PRESS" on stdin.
+
+### Notes
+
+- No entity for `stdout` / `stderr`: an HA sensor state is capped at 255 characters and process
+  output routinely exceeds it. [ROADMAP.md](ROADMAP.md) has the opt-in version.
+- Discovery is built once from the procs file, which is read at start. Adding a process still needs
+  a restart — also in the roadmap.
+
 ## 2.0.1
 
 ### Fixed

@@ -18,6 +18,7 @@ import {handle as handleInstall, ROOT_WARNING} from './lib/install.js';
 import {loadProcs, needsRoot} from './lib/procs.js';
 import {createRunner} from './lib/runner.js';
 import {createDispatch} from './lib/dispatch.js';
+import {discoveryModel} from './lib/hadiscovery.js';
 
 handleInstall(config); // --install / --uninstall never reach the rest
 
@@ -44,6 +45,10 @@ const adapter = createAdapter({
         running: runner ? runner.names : [],
         root: isRoot,
     }),
+    // one HA device per process, plus the bridge they hang off. The set is fixed once the procs
+    // file is read, so there is nothing to re-trigger it on.
+    discovery: () =>
+        discoveryModel({name: config.name, procs, jsonPayloads: config.jsonPayloads, version: pkg.version}),
     onSet: (...args) => dispatch(...args),
     // children of a process controller outlive nothing: stop them with it
     onShutdown: () => runner.stopAll(),
@@ -54,8 +59,10 @@ runner = createRunner({
     log: adapter.log,
     isRoot,
     publish: (item, value, options) => adapter.pubStatus(item, value, options),
+    onChange: () => adapter.pubStatus('bridge/running', runner.names.length),
 });
 dispatch = createDispatch({procs, runner, log: adapter.log});
+adapter.pubStatus('bridge/running', 0);
 
 if (isRoot) {
     adapter.log.warn(ROOT_WARNING.replace('<name>', config.name));

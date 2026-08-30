@@ -86,6 +86,29 @@ that changing a process away from a retained mode leaves the old message on the 
 | `<name>/connected`                            | `2` running · `0` stopped                                              |
 | `<name>/info`                                 | the procs file, the process names, what is running, whether it is root |
 
+## Home Assistant
+
+Every process becomes **one HA device**, hanging off a bridge device for the instance:
+
+| Entity                     | Platform        | What it does                                      |
+| -------------------------- | --------------- | ------------------------------------------------- |
+| **Running**                | `binary_sensor` | on while there is a pid (`device_class: running`) |
+| **Start**                  | `button`        | publishes to `set/<proc>/spawn`                   |
+| **Stop**                   | `button`        | `SIGTERM`                                         |
+| **Kill**                   | `button`        | `SIGKILL`, diagnostic                             |
+| PID, Last exit, Last error | `sensor`        | diagnostics                                       |
+
+The bridge device carries a **Running processes** count. Discovery is published once at start, since
+the device set comes from the procs file; `--no-ha-discovery` turns it off and clears what was
+announced.
+
+The Start button presses an **empty** payload rather than HA's default `PRESS`, so a process with
+`stdinFromSpawnPayload` does not receive the word "PRESS" on stdin.
+
+There is deliberately no entity for `stdout` / `stderr`: an HA sensor state is capped at 255
+characters and process output routinely exceeds that, so such an entity would spend its life logging
+errors. Use the MQTT topics for output.
+
 ## Security
 
 **mqttpc turns "may publish to `<name>/set/#`" into "may run these programs on this host".** That is
@@ -145,6 +168,7 @@ entry can work, since a process that is not root cannot become another user.
 | `-u, --mqtt-url`   | `mqtt://localhost` | broker url                                         |
 | `-n, --name`       | `pc`               | instance name = topic prefix                       |
 | `--root`           | `false`            | `--install` runs the service as root (discouraged) |
+| `--ha-discovery`   | `true`             | announce the processes to Home Assistant           |
 | `-v, --verbosity`  | `info`             | `error`, `warn`, `info`, `debug`                   |
 
 `--help` lists the shared options too, and `--config-schema` prints the JSON Schema a management UI

@@ -53,6 +53,25 @@ args: [-f, -u, nginx]` already half works through `stream` output, but:
 Open: how much output to publish and how to bound it (the buffering added in 2.0 helps), and
 whether this belongs here or in she, which already reads journals over its own helper.
 
+## Process output as a Home Assistant entity
+
+2.1 gives each process a device with Running / Start / Stop / Kill and the diagnostics, but nothing
+for `stdout` or `stderr`. An HA sensor state is capped at **255 characters** and process output
+routinely exceeds it, so a naive sensor would log errors more often than it would show output.
+
+A per-entry `haOutput: true` could add one, with a value template that keeps the last line and
+truncates to fit. Worth doing for the case it is obviously right for — a script whose whole output
+is one short line, a temperature or a status word — and worth keeping off by default for everything
+else.
+
+## Reloading the procs file
+
+The file is read once at start, so adding a process means restarting the instance, and the HA
+devices are built from that same snapshot. A `set/<name>/maintenance/reload`, or watching the file,
+would let a config UI add a process and have it appear without a restart. The discovery publisher
+already handles a changing device set (`markDiscoveryDirty()`), so most of the work is deciding what
+to do about a process that is running when its entry disappears.
+
 ## Retained output left by a previous configuration
 
 Changing a process from `buffer_retain` to `stream` leaves the old retained message on the broker
